@@ -38,4 +38,10 @@ describe Feedzirra::Parser::RSSEntry do
   it "should parse the guid as id" do
     @entry.id.should == "http://tenderlovemaking.com/?p=198"
   end
+  
+  it "should parse the enclosure" do
+    @entry.enclosure_url.should == "http://tenderlovemaking.com/wp-content/uploads/2008/11/meow_autotest.mov"
+    @entry.enclosure_type.should == "video/quick"
+    @entry.enclosure_length.to_i.should == 6961598
+  end
 end
