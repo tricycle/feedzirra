@@ -9,12 +9,14 @@ module Feedzirra
     # * feed_url
     # * url
     # * entries
+    # * description
     class RSS
       include SAXMachine
       include FeedUtilities
       element :title
       element :link, :as => :url
       elements :item, :as => :entries, :class => RSSEntry
+      element :description
 
       attr_accessor :feed_url
 
