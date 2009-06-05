@@ -73,10 +73,14 @@ module Feedzirra
     #                 :if_none_match - String that's normally an etag for the request that was stored previously.
     #                 :on_success - Block that gets executed after a successful request.
     #                 :on_failure - Block that gets executed after a failed request.
+    #                 :include_header_str - a Boolean which determines if the header string is returned
     # === Returns
     # A String of XML if a single URL is passed.
     # 
     # A Hash if multiple URL's are passed. The key will be the URL, and the value the XML.
+    #
+    # If the :include_header_str option is true, the result will be a hash with keys :body and 
+    # :header_str instead of where the raw XML would be.
     def self.fetch_raw(urls, options = {})
       url_queue = [*urls]
       multi = Curl::Multi.new
@@ -91,7 +95,11 @@ module Feedzirra
           curl.userpwd = options[:http_authentication].join(':') if options.has_key?(:http_authentication)
 
           curl.on_success do |c|
-            responses[url] = decode_content(c)
+            if options.has_key?(:include_header_str) and options[:include_header_str]
+              responses[url] = {:body => decode_content(c), :header_str => c.header_str} 
+            else
+              responses[url] = decode_content(c)
+            end
           end
           curl.on_failure do |c|
             responses[url] = c.response_code

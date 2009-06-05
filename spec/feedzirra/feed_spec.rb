@@ -200,9 +200,18 @@ describe Feedzirra::Feed do
         @curl.headers["Accept-encoding"].should == 'gzip, deflate'
       end
 
+      it "should return a hash with body and headers when using :include_header_str option" do
+        raw = Feedzirra::Feed.fetch_raw(@paul_feed[:url], :include_header_str => true)
+        raw.should be_an_instance_of Hash
+        raw.should have_key :body
+        raw.should have_key :header_str
+      end
+
       it "should return raw xml" do
         Feedzirra::Feed.fetch_raw(@paul_feed[:url]).should =~ /^#{Regexp.escape('<?xml version="1.0" encoding="UTF-8"?>')}/
       end
+      
+     
 
       it "should take multiple feed urls and return a hash of urls and response xml" do
         multi = stub('curl_multi', :add => true, :perform => true)
