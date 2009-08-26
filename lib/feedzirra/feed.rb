@@ -27,7 +27,7 @@ module Feedzirra
     # === Returns
     # The class name of the parser that can handle the XML.
     def self.determine_feed_parser_for_xml(xml)
-      start_of_doc = xml.slice(0, 1000)
+      start_of_doc = xml.slice(0, 2000)
       feed_classes.detect {|klass| klass.able_to_parse?(start_of_doc)}
     end
 
@@ -93,6 +93,9 @@ module Feedzirra
           curl.headers["Accept-encoding"]   = 'gzip, deflate' if options.has_key?(:compress)
           curl.follow_location = true
           curl.userpwd = options[:http_authentication].join(':') if options.has_key?(:http_authentication)
+          
+          curl.max_redirects = options[:max_redirects] if options[:max_redirects]
+          curl.timeout = options[:timeout] if options[:timeout]
 
           curl.on_success do |c|
             if options.has_key?(:include_header_str) and options[:include_header_str]
@@ -101,7 +104,7 @@ module Feedzirra
               responses[url] = decode_content(c)
             end
           end
-          curl.on_failure do |c|
+          curl.on_failure do |c, err|
             responses[url] = c.response_code
           end
         end
@@ -213,6 +216,9 @@ module Feedzirra
         curl.headers["Accept-encoding"]   = 'gzip, deflate' if options.has_key?(:compress)
         curl.follow_location = true
         curl.userpwd = options[:http_authentication].join(':') if options.has_key?(:http_authentication)
+
+        curl.max_redirects = options[:max_redirects] if options[:max_redirects]
+        curl.timeout = options[:timeout] if options[:timeout]
         
         curl.on_success do |c|
           add_url_to_multi(multi, url_queue.shift, url_queue, responses, options) unless url_queue.empty?
@@ -237,7 +243,7 @@ module Feedzirra
           end
         end
         
-        curl.on_failure do |c|
+        curl.on_failure do |c, err|
           add_url_to_multi(multi, url_queue.shift, url_queue, responses, options) unless url_queue.empty?
           responses[url] = c.response_code
           options[:on_failure].call(url, c.response_code, c.header_str, c.body_str) if options.has_key?(:on_failure)
@@ -268,6 +274,9 @@ module Feedzirra
         curl.userpwd = options[:http_authentication].join(':') if options.has_key?(:http_authentication)
         curl.follow_location = true
 
+        curl.max_redirects = options[:max_redirects] if options[:max_redirects]
+        curl.timeout = options[:timeout] if options[:timeout]
+
         curl.on_success do |c|
           begin
             add_feed_to_multi(multi, feed_queue.shift, feed_queue, responses, options) unless feed_queue.empty?
@@ -283,7 +292,7 @@ module Feedzirra
           end
         end
 
-        curl.on_failure do |c|
+        curl.on_failure do |c, err|
           add_feed_to_multi(multi, feed_queue.shift, feed_queue, responses, options) unless feed_queue.empty?
           response_code = c.response_code
           if response_code == 304 # it's not modified. this isn't an error condition
