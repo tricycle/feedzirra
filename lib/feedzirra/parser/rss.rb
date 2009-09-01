@@ -17,6 +17,7 @@ module Feedzirra
       element :link, :as => :url
       elements :item, :as => :entries, :class => RSSEntry
       element :description
+      element :"itunes:new-feed-url", :as => :new_feed_url
 
       attr_accessor :feed_url
 
